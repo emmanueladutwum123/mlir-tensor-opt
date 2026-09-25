@@ -44,4 +44,21 @@ def ToptFuseElementwise : Pass<"topt-fuse-elementwise", "func::FuncOp"> {
   let dependentDialects = ["arith::ArithDialect"];
 }
 
+def ConvertToptToLinalg : Pass<"convert-topt-to-linalg", "func::FuncOp"> {
+  let summary = "Lower topt to linalg, tensor and arith (still on tensors)";
+  let description = [{
+    constant -> arith.constant; add, mul, fused_elementwise ->
+    linalg.generic (one loop nest each); transpose -> linalg.transpose;
+    matmul -> linalg.fill + linalg.matmul. Every topt op is illegal
+    afterwards, so a missing lowering is an error, not leftover IR.
+
+    Splat-constant operands of elementwise ops become scalar constants in
+    the generic's body instead of tensor inputs: a splat does not need to be
+    streamed from memory. This applies with and without the topt passes, so
+    it does not flatter any of them in the benchmark.
+  }];
+  let dependentDialects = ["arith::ArithDialect", "linalg::LinalgDialect",
+                           "tensor::TensorDialect"];
+}
+
 #endif // TENSOROPT_PASSES_TD

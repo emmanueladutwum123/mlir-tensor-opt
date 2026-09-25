@@ -12,6 +12,7 @@
 int main(int argc, char **argv) {
   mlir::registerAllPasses();
   mlir::topt::registerTensorOptPasses();
+  mlir::topt::registerLowerToLLVMPipeline();
 
   mlir::DialectRegistry registry;
   registry.insert<mlir::topt::TensorOptDialect>();
