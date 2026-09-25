@@ -1,0 +1,6 @@
+set(LLVM_TARGET_DEFINITIONS TensorOptOps.td)
+mlir_tablegen(TensorOptOps.h.inc -gen-op-decls)
+mlir_tablegen(TensorOptOps.cpp.inc -gen-op-defs)
+mlir_tablegen(TensorOptOpsDialect.h.inc -gen-dialect-decls -dialect=topt)
+mlir_tablegen(TensorOptOpsDialect.cpp.inc -gen-dialect-defs -dialect=topt)
+add_public_tablegen_target(TensorOptOpsIncGen)

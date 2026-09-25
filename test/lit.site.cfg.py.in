@@ -1,0 +1,9 @@
+import os
+
+config.topt_tools_dir = "@PROJECT_BINARY_DIR@/tools/topt-opt"
+config.llvm_tools_dir = "@LLVM_TOOLS_BINARY_DIR@"
+config.mlir_lib_dir = "@LLVM_LIBRARY_DIR@"
+config.shlib_ext = "@CMAKE_SHARED_LIBRARY_SUFFIX@"
+config.test_exec_root = "@CMAKE_CURRENT_BINARY_DIR@"
+
+lit_config.load_config(config, "@CMAKE_CURRENT_SOURCE_DIR@/lit.cfg.py")
