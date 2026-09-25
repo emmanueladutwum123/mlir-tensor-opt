@@ -84,3 +84,22 @@ func.func @fused(%x: tensor<8xf32>, %y: tensor<8xf32>) -> tensor<8xf32> {
   }
   return %r : tensor<8xf32>
 }
+
+// -----
+
+// Lowering must not constant-fold. The conversion driver folds illegal ops
+// by default, which would run topt's fold() hooks here and make a build
+// without -topt-constant-fold fold anyway. Both constant ops must survive
+// as two generics.
+// CHECK-LABEL: func.func @lowering_does_not_fold
+// CHECK-DAG:     arith.constant dense<[1.000000e+00, 2.000000e+00]>
+// CHECK-DAG:     arith.constant dense<[3.000000e+00, 4.000000e+00]>
+// CHECK-COUNT-2: linalg.generic
+// CHECK-NOT:     dense<[3.000000e+00, 8.000000e+00]>
+func.func @lowering_does_not_fold(%x: tensor<2xf32>) -> tensor<2xf32> {
+  %w = topt.constant dense<[1.0, 2.0]> : tensor<2xf32>
+  %s = topt.constant dense<[3.0, 4.0]> : tensor<2xf32>
+  %ws = topt.mul %w, %s : tensor<2xf32>
+  %y = topt.mul %x, %ws : tensor<2xf32>
+  return %y : tensor<2xf32>
+}

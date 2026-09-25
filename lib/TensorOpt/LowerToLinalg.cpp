@@ -155,11 +155,19 @@ struct ConvertToptToLinalgPass
     patterns.add<LowerConstant, LowerBinary<AddOp, arith::AddFOp>,
                  LowerBinary<MulOp, arith::MulFOp>, LowerFused,
                  LowerTranspose, LowerMatmul>(ctx);
+    // The conversion driver's default is to try an illegal op's fold()
+    // before any pattern. For topt that is the constant folder, so a
+    // "lowering only" build would silently constant-fold, and the benchmark
+    // baseline would not be a baseline. (It was, until the loop-nest counts
+    // came out one short.) Lowering lowers; folding is -topt-constant-fold.
+    ConversionConfig config;
+    config.foldingMode = DialectConversionFoldingMode::Never;
+
     // Rejected: applyFullConversion. It would also demand that func.func and
     // func.return be legal-by-declaration; partial conversion with topt
     // marked illegal gives the same guarantee for the ops this pass owns.
     if (failed(applyPartialConversion(getOperation(), target,
-                                      std::move(patterns))))
+                                      std::move(patterns), config)))
       return signalPassFailure();
 
     // Splat constants now consumed as scalars leave dead tensor constants
