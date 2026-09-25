@@ -121,7 +121,9 @@ def compile_object(tools: Tools, src: bytes, topt: list[str], linalg: list[str],
     llvm_dialect = run([tools.topt_opt, "-topt-lower-to-llvm"], staged)
     ir = run([tools.mlir_translate, "--mlir-to-llvmir"], llvm_dialect)
     optimized = run([tools.opt, "-O3"], ir)
-    run([tools.llc, "-O3", "-filetype=obj", "-o", str(obj)], optimized)
+    # PIC: Linux toolchains link PIE executables by default, and llc would
+    # otherwise emit absolute relocations into .rodata that PIE cannot take.
+    run([tools.llc, "-O3", "--relocation-model=pic", "-filetype=obj", "-o", str(obj)], optimized)
     # Berkeley format: text data bss dec hex filename. text + data covers the
     # code and any folded constant payload.
     fields = run([tools.llvm_size, str(obj)]).decode().splitlines()[1].split()
