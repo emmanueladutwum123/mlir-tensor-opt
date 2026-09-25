@@ -16,6 +16,7 @@ def TensorOpt_ConstantOp : TensorOpt_Op<"constant",
   let arguments = (ins TensorOpt_F32ElementsAttr:$value);
   let results = (outs TensorOpt_Tensor:$output);
   let assemblyFormat = "attr-dict $value";
+  let hasFolder = 1;
 }
 
 //===----------------------------------------------------------------------===//
@@ -32,6 +33,7 @@ class TensorOpt_BinaryElementwiseOp<string mnemonic, list<Trait> traits = []>
   let arguments = (ins TensorOpt_Tensor:$lhs, TensorOpt_Tensor:$rhs);
   let results = (outs TensorOpt_Tensor:$output);
   let assemblyFormat = "$lhs `,` $rhs attr-dict `:` type($output)";
+  let hasFolder = 1;
 }
 
 def TensorOpt_AddOp : TensorOpt_BinaryElementwiseOp<"add", [Commutative]> {
@@ -54,6 +56,7 @@ def TensorOpt_MatmulOp : TensorOpt_Op<"matmul", [Pure]> {
     $lhs `,` $rhs attr-dict `:` type($lhs) `,` type($rhs) `->` type($output)
   }];
   let hasVerifier = 1;
+  let hasFolder = 1;
 }
 
 //===----------------------------------------------------------------------===//
@@ -78,6 +81,7 @@ def TensorOpt_TransposeOp : TensorOpt_Op<"transpose", [Pure]> {
     $input `,` $permutation attr-dict `:` type($input) `->` type($output)
   }];
   let hasVerifier = 1;
+  let hasFolder = 1;
 }
 
 //===----------------------------------------------------------------------===//

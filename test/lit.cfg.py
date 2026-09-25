@@ -19,3 +19,5 @@ runner_libs = ",".join(
     for name in ("mlir_runner_utils", "mlir_c_runner_utils")
 )
 config.substitutions.append(("%mlir_runner_libs", runner_libs))
+config.excludes.append("Inputs")
+import sys; config.substitutions.append(("%python", sys.executable))

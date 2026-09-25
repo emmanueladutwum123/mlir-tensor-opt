@@ -4,3 +4,7 @@ mlir_tablegen(TensorOptOps.cpp.inc -gen-op-defs)
 mlir_tablegen(TensorOptOpsDialect.h.inc -gen-dialect-decls -dialect=topt)
 mlir_tablegen(TensorOptOpsDialect.cpp.inc -gen-dialect-defs -dialect=topt)
 add_public_tablegen_target(TensorOptOpsIncGen)
+
+set(LLVM_TARGET_DEFINITIONS Passes.td)
+mlir_tablegen(Passes.h.inc -gen-pass-decls -name TensorOpt)
+add_public_tablegen_target(TensorOptPassesIncGen)

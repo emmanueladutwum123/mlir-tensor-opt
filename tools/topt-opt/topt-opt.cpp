@@ -1,5 +1,6 @@
 // topt-opt: mlir-opt with the topt dialect and passes registered.
 
+#include "TensorOpt/Passes.h"
 #include "TensorOpt/TensorOptDialect.h"
 
 #include "mlir/IR/DialectRegistry.h"
@@ -10,6 +11,7 @@
 
 int main(int argc, char **argv) {
   mlir::registerAllPasses();
+  mlir::topt::registerTensorOptPasses();
 
   mlir::DialectRegistry registry;
   registry.insert<mlir::topt::TensorOptDialect>();
