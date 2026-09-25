@@ -1,0 +1,84 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS arm64 (Homebrew LLVM)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LLVM/MLIR, Ninja and lit
+        run: |
+          brew install llvm ninja
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet lit
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+          "$(brew --prefix llvm)/bin/mlir-opt" --version
+
+      - name: Configure (warnings are errors)
+        run: >
+          cmake -G Ninja -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DMLIR_DIR="$(brew --prefix llvm)/lib/cmake/mlir"
+
+      - name: Build
+        run: ninja -C build
+
+      - name: Lit tests (FileCheck + JIT execution)
+        run: ninja -C build check-topt
+
+      - name: Benchmark smoke test (outputs must be bit-identical)
+        run: python3 bench/run.py --quick --results-md "$RUNNER_TEMP/RESULTS.md"
+
+      - name: Publish benchmark table
+        if: always()
+        run: cat "$RUNNER_TEMP/RESULTS.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+  linux:
+    name: Linux x86-64 (apt.llvm.org LLVM ${{ matrix.llvm }})
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        llvm: ["23"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LLVM/MLIR, Ninja and lit
+        run: |
+          wget -qO- https://apt.llvm.org/llvm.sh > llvm.sh
+          sudo bash llvm.sh ${{ matrix.llvm }}
+          sudo apt-get install -y --no-install-recommends \
+            libmlir-${{ matrix.llvm }}-dev mlir-${{ matrix.llvm }}-tools \
+            llvm-${{ matrix.llvm }}-dev llvm-${{ matrix.llvm }}-tools ninja-build
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet lit
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Configure (warnings are errors)
+        run: >
+          cmake -G Ninja -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=clang-${{ matrix.llvm }}
+          -DCMAKE_CXX_COMPILER=clang++-${{ matrix.llvm }}
+          -DMLIR_DIR=/usr/lib/llvm-${{ matrix.llvm }}/lib/cmake/mlir
+
+      - name: Build
+        run: ninja -C build
+
+      - name: Lit tests (FileCheck + JIT execution)
+        run: ninja -C build check-topt
+
+      - name: Benchmark smoke test (outputs must be bit-identical)
+        run: python3 bench/run.py --quick --results-md "$RUNNER_TEMP/RESULTS.md"
+
+      - name: Publish benchmark table
+        if: always()
+        run: cat "$RUNNER_TEMP/RESULTS.md" >> "$GITHUB_STEP_SUMMARY" || true
