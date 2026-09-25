@@ -2,6 +2,7 @@ add_library(TensorOpt STATIC
   TensorOptDialect.cpp
   TensorOptOps.cpp
   ConstantFold.cpp
+  Simplify.cpp
 )
 add_dependencies(TensorOpt TensorOptOpsIncGen TensorOptPassesIncGen)
 # MLIR_LINK_MLIR_DYLIB is set by Homebrew's build: link the one shared libMLIR
